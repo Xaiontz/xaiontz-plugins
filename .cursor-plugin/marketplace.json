@@ -1,15 +1,17 @@
 {
   "name": "xaiontz-plugins",
   "owner": {
-    "name": "Xaiontz",
+    "name": "Xaiontz Team",
     "email": "rafal@xaiontz.com"
   },
   "metadata": {
-    "description": "Xaiontz plugin marketplace: developer tools, framework rules, MCP integrations, and agent skills"
+    "description": "Xaiontz plugin marketplace: developer tools, framework rules, MCP integrations, and agent skills",
+    "version": "0.1.0",
+    "pluginRoot": "plugins"
   },
   "plugins": [
     {
-      "name": "SME Stack",
+      "name": "sme-stack",
       "source": "sme-stack",
       "description": "Scaffold and develop Next.js + Drizzle + Auth.js + shadcn applications with multi-area auth (public site, client portal, internal tools)."
     }
