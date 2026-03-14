@@ -37,11 +37,20 @@ xaiontz-plugins/
 
 ## Installation
 
-Install individual plugins globally so they're available across all your projects:
+Run the install script from the repo root to copy plugins into Cursor's local plugin directory:
 
-```bash
-cp -r sme-stack ~/.cursor/plugins/local/sme-stack
+```powershell
+# Install all plugins
+.\install.ps1
+
+# Install a specific plugin
+.\install.ps1 -Plugins sme-stack
+
+# Overwrite existing installs without prompting
+.\install.ps1 -Force
 ```
+
+Restart Cursor after installing to pick up changes.
 
 ## License
 
