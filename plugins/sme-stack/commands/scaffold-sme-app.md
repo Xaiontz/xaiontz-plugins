@@ -15,7 +15,7 @@ Prompt the user for each before proceeding:
 2. **Target directory** (default: `./<app-name>`)
 3. **Auth providers** to configure:
    - SSO provider for employees (Microsoft Entra ID, Google Workspace, Okta, or none)
-   - Client auth method (magic link via Resend, credentials, or both)
+   - Client auth method (magic link via Azure Communication Services email, credentials, or both)
 4. **Database** connection string or use local Postgres default (`postgresql://localhost:5432/<app-name>`)
 
 ## Execution
