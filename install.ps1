@@ -60,7 +60,7 @@ if (-not (Test-Path $LocalPluginsDir)) {
 $installed = @()
 
 foreach ($plugin in $selected) {
-    $src = Join-Path $RepoRoot $plugin.source
+    $src = Join-Path (Join-Path $RepoRoot 'plugins') $plugin.source
     $dest = Join-Path $LocalPluginsDir $plugin.source
 
     if (-not (Test-Path $src)) {
