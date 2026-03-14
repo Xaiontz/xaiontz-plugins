@@ -2,12 +2,12 @@
   "name": "sme-stack",
   "displayName": "SME Stack",
   "version": "0.1.0",
-  "description": "Scaffold and develop Next.js + Drizzle + Auth.js + shadcn applications with multi-area auth (public, client portal, internal tools).",
+  "description": "Scaffold and develop Next.js + Drizzle + Auth.js + shadcn applications with multi-area auth (public, client portal, internal tools). Includes Azure + Cloudflare infrastructure scaffolding with Pulumi.",
   "author": {
     "name": "Xaiontz"
   },
   "license": "MIT",
-  "keywords": ["nextjs", "drizzle", "authjs", "shadcn", "scaffold"],
+  "keywords": ["nextjs", "drizzle", "authjs", "shadcn", "scaffold", "pulumi", "azure", "infrastructure"],
   "category": "developer-tools",
   "tags": ["scaffold", "fullstack", "recipe"],
   "skills": "./skills/",

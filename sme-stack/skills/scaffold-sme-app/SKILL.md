@@ -159,3 +159,7 @@ After scaffolding, confirm:
 - Database migration applies cleanly
 
 Inform the user about the plugin's development rules (`drizzle.mdc`, `auth.mdc`, `project-structure.mdc`) that will guide ongoing development.
+
+### Infrastructure
+
+Ask the user if they want to scaffold Azure + Cloudflare infrastructure for this project. If yes, use the `scaffold-infra` skill to create the `infra/` directory with Pulumi TypeScript code, CI/CD pipeline, and local dev setup.

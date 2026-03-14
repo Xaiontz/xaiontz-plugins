@@ -1,0 +1,120 @@
+---
+description: Conventions for Pulumi infrastructure code in infra/
+globs: infra/**
+---
+
+# Infrastructure Conventions
+
+## Pulumi TypeScript
+
+- All infrastructure is defined in `infra/` using Pulumi with TypeScript.
+- Each Azure resource category lives in its own file under `infra/azure/`.
+- Cloudflare resources live under `infra/cloudflare/`.
+- `infra/index.ts` is the entry point — it imports all resource files and exports stack outputs.
+- `infra/azure/stack.ts` is the stack detection module — all resource files import from it.
+
+## Resource Naming
+
+- Resource group: `{repo-name}-rg`
+- App resources use the project slug: `{slug}-app`, `{slug}-env`, `{slug}-identity`, `{slug}media`
+- Database name matches the project slug in prod, with a branch suffix in preview
+- Container App name matches `{slug}-app` in prod, with a branch suffix in preview
+- Never use random suffixes — names are deterministic
+
+## Shared Resources
+
+Shared Xaiontz infrastructure is referenced in `infra/azure/shared.ts`:
+
+- `xaiontz-shared-rg` — shared resource group
+- `xaiontz-shared-pg` — shared PostgreSQL flexible server
+- `xaiontzsharedacr` — shared container registry
+- `xaiontz-shared-kv` — shared Key Vault (Pulumi secrets)
+- `xaiontzsharedfiles` — shared storage account (Pulumi state)
+
+Never create, modify, or delete shared resources from per-project infra code.
+
+## Secrets
+
+- Always use `config.requireSecret()` for sensitive values
+- Never hardcode secrets, tokens, or passwords in source files
+- Secrets are encrypted in `Pulumi.prod.yaml` via Azure Key Vault
+- Preview stacks inherit secrets from prod via `--copy-config-from prod`
+
+## Adding New Resources
+
+1. Create a new file in `infra/azure/` (or `infra/cloudflare/` for Cloudflare resources)
+2. Import `isProd` from `./stack` and decide: is this resource prod-only or needed in all stacks?
+3. Use `resourceGroupName` from `./resource-group` (a plain string, not `rg.name`)
+4. If the resource needs RBAC, add role assignments in `infra/azure/roles.ts` inside the `if (isProd)` block
+5. Import the new file in `infra/index.ts`
+6. If preview stacks need values from this resource, export them from `index.ts` and use `fromProd()` in the resource file
+
+## Role Assignments
+
+All RBAC role assignments are centralised in `infra/azure/roles.ts` inside an `if (isProd)` guard. When adding a new role:
+
+- Use well-known role definition IDs from Azure documentation
+- Set `principalType: authorization.PrincipalType.ServicePrincipal` for managed identities
+- Scope to the narrowest resource possible
+
+## Container App Environment Variables
+
+Application config is passed via environment variables in `infra/azure/container-app.ts`:
+
+- Non-secret values: `{ name: "KEY", value: "value" }`
+- Secret values: `{ name: "KEY", secretRef: "secret-name" }` with a corresponding entry in `configuration.secrets`
+
+## Preview Deployments
+
+The infra code supports two stack types: `prod` (main branch) and `preview-{branch}` (non-main branches).
+
+### Stack detection
+
+Every resource file imports from `infra/azure/stack.ts`:
+
+```typescript
+import { isProd, branchName, fromProd } from "./stack";
+```
+
+- `isProd`: `true` when running in the `prod` stack
+- `branchName`: sanitised branch name (e.g. `feature-login`)
+- `fromProd<T>(key)`: reads a value from the prod stack via `StackReference`
+
+### Prod-only resources
+
+Resources that should only exist in prod (environment, identity, storage, roles, certificate, email, DNS) are guarded:
+
+```typescript
+if (isProd) {
+  // create resource
+}
+```
+
+Or use the conditional creation pattern:
+
+```typescript
+const resource = isProd ? new SomeResource("name", { ... }) : undefined;
+export const resourceValue = isProd ? resource!.someProperty : fromProd<string>("resourceValue");
+```
+
+### Branch-specific resources
+
+Resources that exist in all stacks but with branch-specific names (database, container app) use `branchName`:
+
+```typescript
+const name = isProd ? "myapp" : `myapp-${branchName}`;
+```
+
+### Stack outputs
+
+When adding a new value that preview stacks need from prod, export it from `infra/index.ts`. Preview stacks read it via `fromProd<T>("exportName")`.
+
+## Local Development
+
+`infra/local_dev/docker-compose.yml` provides a local PostgreSQL instance for development. The database name matches the project slug.
+
+The `infra_login.ps1` script accepts an optional stack name argument for targeting preview stacks locally:
+
+```powershell
+.\infra_login.ps1 preview-my-branch
+```
