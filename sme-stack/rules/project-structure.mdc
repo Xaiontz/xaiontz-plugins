@@ -1,0 +1,41 @@
+---
+description: Project structure conventions for route groups, file placement, and naming.
+alwaysApply: true
+globs: "**/*.ts,**/*.tsx"
+---
+
+# Project structure conventions
+
+## Route groups
+
+- `src/app/(public)/` — public-facing pages, no auth required.
+- `src/app/(portal)/` — client portal, requires authenticated session.
+- `src/app/(internal)/` — employee tools, requires `role === "employee"`.
+- `src/app/(auth)/` — login, register, error pages.
+- Each route group has its own `layout.tsx` with area-appropriate navigation.
+- Never import portal or internal components into public pages, and vice versa.
+
+## File placement
+
+- Database schema: `src/db/schema/` (grouped by domain).
+- Database connection: `src/db/index.ts` (singleton, import as `@/db`).
+- Auth configuration: `src/auth.ts`.
+- Middleware: `src/middleware.ts`.
+- shadcn components: `src/components/ui/` (auto-generated, do not modify manually).
+- Shared components: `src/components/shared/` (used across 2+ route groups).
+- Area-specific components: `src/components/<area>/` (e.g. `portal/`, `internal/`, `public/`).
+- Utilities: `src/lib/`.
+- Type declarations: `src/types/`.
+
+## Naming
+
+- Directories and route segments: kebab-case (`client-details/`).
+- React components: PascalCase files (`UserMenu.tsx`).
+- Utilities and hooks: camelCase files (`getSession.ts`, `useDebounce.ts`).
+- Database tables: snake_case (`contact_submissions`).
+- Database schema files: group by domain, not by table.
+
+## Imports
+
+- Use `@/` path alias for all project imports.
+- Never use relative paths that traverse up more than one level (`../../` is a code smell).

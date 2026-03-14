@@ -1,0 +1,31 @@
+---
+description: Drizzle ORM conventions for schema definition, queries, and migrations.
+alwaysApply: true
+globs: "**/*.ts,**/*.tsx"
+---
+
+# Drizzle ORM conventions
+
+## Schema
+
+- Define tables in `src/db/schema/` grouped by domain (e.g. `auth.ts`, `app.ts`).
+- Re-export all tables and relations from `src/db/schema/index.ts` — Drizzle Kit reads this file.
+- Use snake_case for database column names: `first_name`, `created_at`.
+- Use camelCase for TypeScript property names: `firstName`, `createdAt`.
+- Include `createdAt` and `updatedAt` timestamps on every table.
+- Use `text("id").$defaultFn(() => crypto.randomUUID())` for UUID primary keys, or `serial("id")` for auto-increment.
+
+## Queries
+
+- Import `db` from `@/db` — never create new database connections in components or routes.
+- Use the type-safe query builder (`db.select().from()`) for simple queries.
+- Use the relations query API (`db.query.tableName.findMany()`) when loading nested data.
+- Use `eq`, `and`, `or`, `isNull` from `drizzle-orm` — never write raw SQL strings unless absolutely necessary.
+
+## Migrations
+
+- Run `pnpm db:generate` after every schema change to create a migration.
+- Review generated SQL in `drizzle/` before applying.
+- Run `pnpm db:migrate` to apply migrations.
+- Never use `pnpm db:push` in production — only for rapid local iteration.
+- Commit migration files to git.

@@ -1,0 +1,15 @@
+{
+  "name": "sme-stack",
+  "displayName": "SME Stack",
+  "version": "0.1.0",
+  "description": "Scaffold and develop Next.js + Drizzle + Auth.js + shadcn applications with multi-area auth (public, client portal, internal tools).",
+  "author": {
+    "name": "Xaiontz"
+  },
+  "license": "MIT",
+  "keywords": ["nextjs", "drizzle", "authjs", "shadcn", "scaffold"],
+  "category": "developer-tools",
+  "tags": ["scaffold", "fullstack", "recipe"],
+  "skills": "./skills/",
+  "rules": "./rules/"
+}

@@ -1,0 +1,27 @@
+---
+description: Auth.js (NextAuth v5) patterns for session handling, role-based access, and security.
+alwaysApply: true
+globs: "**/*.ts,**/*.tsx"
+---
+
+# Auth.js conventions
+
+## Session access
+
+- In Server Components and Server Actions: use `const session = await auth()` from `@/auth`.
+- In Client Components: use `useSession()` from `next-auth/react`. The app must be wrapped with `<SessionProvider>`.
+- In middleware: access `req.auth` (already populated by the auth middleware wrapper).
+
+## Role-based access
+
+- Check `session.user.role` for authorization — roles are `"client"` or `"employee"`.
+- Route-level protection happens in `src/middleware.ts` — do not duplicate auth checks in every page.
+- For fine-grained access within a route, check `session.user.role` in the Server Component or Server Action.
+
+## Security rules
+
+- Never expose raw JWT tokens to the client. Use `session.user.id` and `session.user.role`.
+- Always redirect unauthenticated users to `/login` with a `callbackUrl` parameter.
+- Use `session: { strategy: "jwt" }` for serverless/edge compatibility.
+- Set `NEXTAUTH_SECRET` to a cryptographically strong random value (minimum 32 characters).
+- When querying data for a portal user, always filter by `session.user.id` to prevent data leakage.
