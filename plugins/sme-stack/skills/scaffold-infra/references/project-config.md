@@ -98,6 +98,45 @@ if ($LASTEXITCODE -ne 0) {
 
 ---
 
+## init_pulumi_backend.ps1
+
+Creates the Azure Blob Storage container and Key Vault encryption key that the Pulumi backend requires. Must be run once before `infra_login.ps1`.
+
+```powershell
+$ErrorActionPreference = "Stop"
+
+$sa        = "xaiontzsharedfiles"
+$kv        = "xaiontz-shared-kv"
+$container = "pulumi-{{REPO_NAME}}"
+$kvKey     = "pulumi-{{REPO_NAME}}"
+
+function Test-AzExists {
+  param([string[]]$AzArgs)
+  $ErrorActionPreference = "Continue"
+  az @AzArgs 2>&1 | Out-Null
+  return $LASTEXITCODE -eq 0
+}
+
+Write-Host "Ensuring blob container '$container' ..." -ForegroundColor Cyan
+if (-not (Test-AzExists storage container show --name $container --account-name $sa --auth-mode login)) {
+  az storage container create `
+    --name $container `
+    --account-name $sa `
+    --auth-mode login `
+    --output none
+}
+
+Write-Host "Ensuring Key Vault key '$kvKey' ..." -ForegroundColor Cyan
+if (-not (Test-AzExists keyvault key show --vault-name $kv --name $kvKey)) {
+  az keyvault key create --vault-name $kv --name $kvKey --kty RSA --output none
+}
+
+Write-Host "`nDone. Backend resources are ready." -ForegroundColor Green
+Write-Host "Run .\infra_login.ps1 to initialise the Pulumi stack." -ForegroundColor Green
+```
+
+---
+
 ## infra_up.ps1
 
 Accepts an optional stack name argument, forwarded to `infra_login.ps1`. Defaults to `prod`.

@@ -41,6 +41,7 @@ Create these files, replacing `{{PLACEHOLDER}}` tokens with the collected inputs
 - `infra/Pulumi.yaml`
 - `infra/package.json`
 - `infra/tsconfig.json`
+- `infra/init_pulumi_backend.ps1`
 - `infra/infra_login.ps1`
 - `infra/infra_up.ps1`
 - `infra/local_dev/docker-compose.yml`
@@ -103,7 +104,17 @@ infra/bin/
 infra/node_modules/
 ```
 
-### 9. Initial Pulumi login (inform user)
+### 9. Prepare Pulumi backend (inform user)
+
+Tell the user to run the following from the `infra/` directory to create the backend storage container and encryption key:
+
+```powershell
+.\init_pulumi_backend.ps1
+```
+
+This is a one-time setup that ensures the Azure Blob Storage container and Key Vault key exist before Pulumi can use them. It is idempotent — safe to re-run.
+
+### 10. Initial Pulumi login (inform user)
 
 Tell the user to run the following from the `infra/` directory to initialise the Pulumi backend:
 
@@ -122,17 +133,14 @@ To login and target a preview stack instead:
 .\infra_login.ps1 preview-my-branch
 ```
 
-### 10. Configure Pulumi secrets (inform user)
+### 11. Configure Pulumi stack (inform user)
 
-After login, the user must set these config values:
+After login, the user must set the Azure location and project secrets:
 
-```bash
+```powershell
 pulumi config set azure-native:location {{AZURE_LOCATION}}
-pulumi config set --secret payloadSecret "$(openssl rand -base64 32)"
-pulumi config set cloudflareZoneId <zone-id>
-pulumi config set --secret cloudflare:apiToken <token>
-pulumi config set --secret originCaKey <key>
-pulumi config set --secret entraAuthClientSecret <secret>
+pulumi config set --secret {{PROJECT_SLUG}}:payloadSecret <your-payload-secret-value>
+pulumi config set --secret {{PROJECT_SLUG}}:entraAuthClientSecret <your-entra-secret-value>
 ```
 
 And update `ENTRA_AUTH_CLIENT_ID` and `ENTRA_AUTH_TENANT_ID` in `container-app.ts` after creating the Entra ID app registration.
@@ -152,6 +160,7 @@ Inform the user about:
   - `infra.yml` — auto-deploys prod infra on `infra/**` changes to `main`
   - `infra-preview.yml` — auto-deploys preview environment on every push to non-main branches
   - `infra-preview-cleanup.yml` — auto-destroys preview environment on PR close
+- The `init_pulumi_backend.ps1` script to prepare backend resources (run once before first login)
 - The `infra_login.ps1` / `infra_up.ps1` scripts for local Pulumi operations
 - The `local_dev/docker-compose.yml` for running PostgreSQL locally during development
 - The preview deployment pattern: each branch gets its own database and Container App with an auto-generated FQDN

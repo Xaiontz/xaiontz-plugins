@@ -37,14 +37,21 @@ export function fromProd<T>(key: string): pulumi.Output<T> {
 Prod creates the resource group. Preview stacks reuse it by name.
 
 ```typescript
+import * as pulumi from "@pulumi/pulumi";
 import * as resources from "@pulumi/azure-native/resources";
 import { isProd } from "./stack";
 
-export const resourceGroupName = "{{REPO_NAME}}-rg";
+const rgName = "{{REPO_NAME}}-rg";
 
 export const rg = isProd
-  ? new resources.ResourceGroup("rg", { resourceGroupName })
+  ? new resources.ResourceGroup("rg", { resourceGroupName: rgName })
   : undefined;
+
+// In prod, rg!.name is an Output that carries an implicit dependency —
+// every resource that uses resourceGroupName will wait for the RG.
+export const resourceGroupName: pulumi.Input<string> = isProd
+  ? rg!.name
+  : rgName;
 ```
 
 ---
@@ -77,7 +84,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as dbforpostgresql from "@pulumi/azure-native/dbforpostgresql";
 import * as command from "@pulumi/command";
 import { sharedRg, sharedPgServer } from "./shared";
-import { identityName } from "./identity";
+import { identityName, identity } from "./identity";
 import { isProd, branchName } from "./stack";
 
 const dbName = isProd ? "{{PROJECT_SLUG}}" : `{{PROJECT_SLUG}}-${branchName}`;
@@ -89,7 +96,7 @@ export const pgDatabase = new dbforpostgresql.Database("db", {
 });
 
 export const databaseHost = `${sharedPgServer}.postgres.database.azure.com`;
-export const databaseName = dbName;
+export const databaseName = pgDatabase.name;
 
 function runSql(name: string, database: string, sql: string, deps: pulumi.Resource[]) {
   return new command.local.Command(name, {
@@ -111,13 +118,14 @@ function runSql(name: string, database: string, sql: string, deps: pulumi.Resour
   }, { dependsOn: deps });
 }
 
-// AAD role only needs creating once (in prod) — the identity is shared
+// AAD role only needs creating once (in prod) — the identity is shared.
+// Depends on identity so the managed identity exists in AAD before the SQL runs.
 const createRole = isProd
   ? runSql(
       "create-aad-role",
       "postgres",
       `SELECT * FROM pgaadauth_create_principal('${identityName}', false, false);`,
-      [pgDatabase],
+      identity ? [pgDatabase, identity] : [pgDatabase],
     )
   : undefined;
 
@@ -177,7 +185,7 @@ import * as managedidentity from "@pulumi/azure-native/managedidentity";
 import { isProd, fromProd } from "./stack";
 import { resourceGroupName } from "./resource-group";
 
-const identity = isProd
+export const identity = isProd
   ? new managedidentity.UserAssignedIdentity("identity", {
       resourceGroupName,
       resourceName: "{{PROJECT_SLUG}}-identity",
